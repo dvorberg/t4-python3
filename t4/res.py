@@ -41,4 +41,4 @@ ip_v4_address_with_mask_re_groups = re.compile(
 
 http_url_re = re.compile("https?://(?:[0-9a-z](?:[0-9a-z-]*[0-9a-z])?\.)+[a-z]{2,6}(/.*)?")
 
-login_re = re.compile(r"[a-zA-Z0-9_][-a-zA-Z0-9_\.]+")
+login_re = re.compile(r"^[a-zA-Z0-9_][-a-zA-Z0-9_\.]+$")
