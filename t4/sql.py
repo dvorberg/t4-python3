@@ -205,6 +205,8 @@ class Statement(Part):
     Base class for all statements (select, update, delete, etc)
     """
 
+class Command(Part):
+    pass
     
 class Clause(Part):
     """
@@ -459,6 +461,26 @@ class as_(expression):
     def sql(self):
         return ( expression.sql(self), " AS ", self._identifyer, )
 
+
+class left_join(Clause):
+    rank = 0
+    
+    def __init__(self, relation, *on):
+        self._relation = relation
+        self._on = on
+
+    def sql(self):
+        return ( "LEFT JOIN ", self._relation, " ON ", ) + self._on
+    
+class right_join(Clause):
+    rank = 0
+    
+    def __init__(self, relation, *on):
+        self._relation = relation
+        self._on = on
+
+    def sql(self):
+        return ( "RIGHT JOIN ", self._relation, " ON ", ) + self._on
     
 class where(Clause, expression):
     """
@@ -646,7 +668,7 @@ class offset(Clause):
         #return ( "OFFSET ", integer_literal(self._offset), )
         return "OFFSET %i" % self._offset
 
-class insert(Statement):
+class insert(Command):
     """
     Encapsulate an INSERT statement.
 
@@ -697,7 +719,7 @@ class insert(Statement):
 
         return ret
         
-class update(Statement):
+class update(Command):
     def __init__(self, relation, where_clause, data={}):
         self._relation = relation
         self._where = where_clause
@@ -721,3 +743,10 @@ class update(Statement):
         ret.append(self._where)
         return ret
         
+class delete(Command):
+    def __init__(self, relation, where_clause):
+        self._relation = relation
+        self._where_clause = where_clause
+
+    def sql(self):
+        return [ "DELETE FROM ", self._relation, " ", self._where_clause, ]
