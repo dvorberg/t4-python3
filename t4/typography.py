@@ -1,5 +1,45 @@
 import datetime, re
 
+opening_quote_re = re.compile(r'(\s+|^)"([0-9a-zA-Z])')
+closing_quote_re = re.compile(r'(\S+)"(\s+|$|[,\.;!])')
+opening_single_quote_re = re.compile(r"(\s+|^)'([0-9a-zA-Z])")
+closing_single_quote_re = re.compile(r"([^\s']+)'(\s+|$|[,\.;!])")
+date_until_re = re.compile(r'(\d+)\.-(\d+)\.')
+
+def improve_typography(content, lang="de"):
+    if lang == "de":
+        # "gerade" und ,,typografische'' Anführungszeichen    
+        content = re.sub(opening_quote_re, u"\\1„\\2", content)
+        content = re.sub(closing_quote_re, u"\\1“\\2", content)
+        content = re.sub(opening_single_quote_re, u"\\1‚\\2", content)
+        content = re.sub(closing_single_quote_re, u"\\1‘\\2", content)
+    elif lang == "en":
+        content = re.sub(opening_quote_re, u"\\1“\\2", content)
+        content = re.sub(closing_quote_re, u"\\1”\\2", content)
+        content = re.sub(opening_single_quote_re, u"\\1‘\\2", content)
+        content = re.sub(closing_single_quote_re, u"\\1’\\2", content)
+    elif lang == "fr":
+        content = re.sub(opening_quote_re, u"\\1«\\2", content)
+        content = re.sub(closing_quote_re, u"\\1»\\2", content)
+        content = re.sub(opening_single_quote_re, u"\\1‹\\2", content)
+        content = re.sub(closing_single_quote_re, u"\\1›\\2", content)
+    else:
+        pass
+
+    # Converts 1.-2. into 1.–2. (with a proper 'until' dash)
+    content = re.sub(date_until_re, r"\1.–\2.", content)
+
+    # Put long dashes where they (might) belog
+    content = content.replace(u" - ", u" — ")
+
+    # Ellipsis
+    content = content.replace(" ...", " …")
+    content = content.replace("...", "…")
+    
+    return content
+
+
+
 def pretty_bytes(bytes):
     if bytes < 1024:
         return str(bytes) + " Bytes"
