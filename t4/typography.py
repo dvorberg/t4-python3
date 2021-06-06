@@ -1,4 +1,4 @@
-import datetime, re
+import datetime, re, html
 
 opening_quote_re = re.compile(r'(\s+|^)"([0-9a-zA-Z])')
 closing_quote_re = re.compile(r'(\S+)"(\s+|$|[,\.;!])')
@@ -38,7 +38,25 @@ def improve_typography(content, lang="de"):
     
     return content
 
+def add_web_paragraphs(s, use_ps=True):
+    """
+    Make a text appear in plain HTML circa what one would expect when using
+    <ENTER> in a <textarea>. When use_ps= is true, paragraphs split by two
+    newlines will be wrapped in <p>s. Otherwise the input text will be treated
+    as a single paragraph. The input must not contain html, because it will
+    be quoted.
+    """
+    s = html.escape(s)
+    
+    s = s.replace("\r\n", "\n")
+    ps = s.split("\n\n")
 
+    ps = [p.replace("\n", "<br />\n") for p in ps]
+
+    if use_ps:
+        ps = ["<p>" + p + "</p>" for p in ps]
+    
+    return "\n\n".join(ps)
 
 def pretty_bytes(bytes):
     if bytes < 1024:
