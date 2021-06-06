@@ -25,7 +25,7 @@
 ##
 ##  I have added a copy of the GPL in the file COPYING
 
-import sys, re, unicodedata
+import sys, re, unicodedata, os.path as op
 
 def asciify(string):
     '''
@@ -98,3 +98,29 @@ def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
     
     return id.decode("ascii")
 
+
+
+path_seps = { "/", "\\\\", ":", op.pathsep, op.altsep, }
+if None in path_seps:
+    path_seps.remove(None)
+
+path_sep_re = re.compile("|".join(path_seps))
+                         
+illegel_in_filename_re = re.compile(
+    r"^\.|(\s*\.+\s+|/|\\|\.{2,}|:|!|#| |\"|'|\s)+")
+
+def safe_filename(name, contains_dir=False):
+    if contains_dir:
+        parts = path_sep_re.split(name)
+        fn = parts[-1]
+    else:
+        fn = name
+        
+    ret = illegel_in_filename_re.sub(" ", name).strip()
+
+    # The regular expression does not catch all cases in which someone
+    # might try to inject a hidden file (starting with a .). 
+    while ret[0] == ".":
+        ret = ret[1:]
+
+    return ret
