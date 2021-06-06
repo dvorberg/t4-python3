@@ -39,7 +39,15 @@ def apple_style_random_password(groupnum=4, grouplength=3):
             yield "".join(random.sample(characters, grouplength))
 
     groups = itertools.islice(groups(), groupnum)
-    return "-".join(groups)
+    ret = "-".join(groups)
+
+    for d in digits:
+        if d in ret:
+            return ret
+    else:
+        # Force a digit in the password; one at the end.
+        return ret[:-1] + random.sample(digits, 1)[0]
+    
     
 
 password_specials = "+-/*!&;$,@"
