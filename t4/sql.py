@@ -363,6 +363,7 @@ class date_literal(casted_literal):
 
     def __init__(self, value:datetime.date):
         super().__init__(value.strftime("%Y-%m-%d"))
+
     
     
 types = { int: integer_literal,
@@ -384,7 +385,6 @@ def find_literal_maybe(value):
         else:
             raise TypeError("Can’t find literal class for: %s" % repr(t))
         
-    
 class relation(Part): 
     def __init__(self, name, schema=None):
         self._name = ensure_identifyer(name)
@@ -462,6 +462,29 @@ class as_(expression):
         return ( expression.sql(self), " AS ", self._identifyer, )
 
 
+class array_expression(expression):
+    def __init__(self, values, arraytype=None):
+        """
+        `values` must be a list of SQL value literals.
+        An `arraytype` may be supplied (including trailing [] matching array
+          dimensions. This is required for empty arrays.
+        """
+        self.values = list(values)
+        self.arraytype = arraytype
+
+        if len(self.values) == 0 and arraytype is None:
+            raise ValueError("For an empty array, arraytype= must be set.")
+
+    def sql(self):
+        
+        values = comma_separated([find_literal_maybe(v) for v in self.values]),
+        if self.arraytype:
+            end = "::" + self.arraytype
+        else:
+            end = ""
+            
+        return ( "ARRAY[", values, "]"+end)
+    
 class left_join(Clause):
     rank = 0
     
