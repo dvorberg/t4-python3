@@ -1,5 +1,7 @@
 import datetime, re, html
 
+from .sql import normalize_whitespace
+
 opening_quote_re = re.compile(r'(\s+|^)"([0-9a-zA-Z])')
 closing_quote_re = re.compile(r'(\S+)"(\s+|$|[,\.;!])')
 opening_single_quote_re = re.compile(r"(\s+|^)'([0-9a-zA-Z])")
@@ -110,17 +112,16 @@ def pretty_german_date(pit, with_time=False, with_timezone=False,
     if pit is None:
         return ""
 
-    if with_time:
-        r = "%s.%s.%s %02i:%02i Uhr" % ( pit.day, pit.month, pit.year,
-                                         pit.hour, pit.minute, )
+    if monthname:
+        r = "%s. %s %s" % ( pit.day, monat[pit.month], pit.year, )
     else:
-        if monthname:
-            r = "%s. %s %s" % ( pit.day, monat[pit.month], pit.year, )
-        else:
-            r = "%s.%s.%s" % ( pit.day, pit.month, pit.year, )
+        r = "%s.%s.%s" % ( pit.day, pit.month, pit.year, )
 
-    if with_timezone:
-        r += " (%s)" % pit.timezone
+    if with_time:
+        r += ", %02i.%02i Uhr" % ( pit.hour, pit.minute, )
+
+        if with_timezone:
+            r += " (%s)" % pit.timezone
 
     return r
 
