@@ -37,7 +37,7 @@ NULL = "NULL"
 
 whitespace_re = re.compile(r"\s+")
 def normalize_whitespace(s):
-    return whitespace_re.sub(s, " ")
+    return whitespace_re.sub(s, " ").strip()
 
 def separated(char, parts):
     ret = list()
