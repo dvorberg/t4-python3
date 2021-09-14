@@ -37,6 +37,7 @@ except ImportError:
 
 from email import encoders
 from email.message import Message
+from email.mime.base import MIMEBase
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
@@ -44,6 +45,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
 from email.header import Header
+
+# Send UTF-8 text parts encoded Quoted Printable (rather than base64)
+from email import charset
+charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
 
 
 class sendmail_attachment:
@@ -92,37 +97,45 @@ def sendmail(from_name, from_email,
              subject, message, attachments=[], headers={}, bcc=[],             
              text_subtype="plain", encoding="utf-8", multipart_subtype="mixed"):
     # Verify all the e-Mail Addresses
-    def verity_email_address(email):
+    def verify_email_address(email):
         if email_re.match(email) is None:
             raise ValueError("Not a valid e-mail address: %s" % repr(email))
 
-    map(verity_email_address, bcc)
-    verity_email_address(from_email)
-    verity_email_address(to_email)
+    map(verify_email_address, bcc)
+    verify_email_address(from_email)
+    verify_email_address(to_email)
         
     if xsc is not None and isinstance(message, xsc.Node):
         message = message.string(encoding=encoding)
         if text_subtype == "plain":
             text_subtype = "html"
-            
-    textpart = MIMEText(message, text_subtype, encoding)
-    
-    if len(attachments) == 0:
-        outer = textpart
+
+    if isinstance(message, MIMEBase):
+        outer = message
+
+        if len(attachments) > 0:
+            raise ValueError("Can’t have sendmail()-style attachments "
+                             "when supplying your own email.mime.MIME* "
+                             "instance as message.")
     else:
-        outer = MIMEMultipart(multipart_subtype)
-        outer.attach(textpart)
+        textpart = MIMEText(message, text_subtype, encoding)
+    
+        if len(attachments) == 0:
+            outer = textpart
+        else:
+            outer = MIMEMultipart(multipart_subtype)
+            outer.attach(textpart)
 
         
     outer["Subject"] = Header(subject)
     outer["To"] = formataddr( (to_name, to_email,) )
     outer["From"] = formataddr( (from_name, from_email,) )
     
-
-    
     for name, value in headers.items():
         outer[name] = value
-    outer.preamble = "You will not see this in a MIME-aware mail reader.\n"
+
+    if not outer.preamble:
+        outer.preamble = "You will not see this in a MIME-aware mail reader.\n"
 
     for a in attachments:
         assert isinstance(a, sendmail_attachment), TypeError
