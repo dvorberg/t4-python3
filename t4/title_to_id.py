@@ -75,6 +75,11 @@ def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
 
     if all_lowercase: title = title.lower()
     title = title.replace("ß", "ss")
+    # title = asciify(title)
+    
+    # Eigentlich nur für’s ELKG.
+    title = title.replace("¹", "1")
+    title = title.replace("²", "2")
     
     parts = [""]
     for char in title:
