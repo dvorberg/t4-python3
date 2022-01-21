@@ -239,6 +239,7 @@ class Identifyer(Part):
     @property
     def quote(self):
         return self._quote
+    
 
 identifyer = Identifyer
 
@@ -561,6 +562,22 @@ class where(Clause, expression):
     def and_(*others):
         return where._conjoin("AND", *others)
 
+
+def add_where_clause(clauses, where_clause, conjunction=where.and_):
+    found = None
+    new = []
+    for clause in clauses:
+        if isinstance(clause, where):
+            found = clause
+        else:
+            new.append(clause)
+
+    if found:
+        new.append(conjunction(where_clause, found))
+    else:
+        new.append(where_clause)
+        
+    return new
     
 class subquery_as_relation(relation):
     def __init__(self, select, alias):
