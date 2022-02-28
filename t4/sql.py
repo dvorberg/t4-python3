@@ -539,7 +539,7 @@ class where(Clause, expression):
         OTHERS is a list of sql.where instances that are connected
         using OR.
         """
-        others = filter(lambda o: o is not None, others)
+        others = filter(lambda o: bool(o), others)
 
         ret = list()
         
@@ -555,7 +555,9 @@ class where(Clause, expression):
         del ret[-1] # remove the last OR
 
         return where(*ret)        
-    
+
+    # These two don’t have an explicit ‘self’, which makes the self-instance
+    # go into the ‘others’ as-is. 
     def or_(*others):
         return where._conjoin("OR", *others)
     
@@ -563,6 +565,20 @@ class where(Clause, expression):
         return where._conjoin("AND", *others)
 
 
+class null_where(where):
+    """
+    `Empty` WHERE clause that does nothing (and doesn't add a superflous
+    WHERE to the SQL), but provides and_() and or_() for concatination.
+    """
+    def __init__(self):
+        pass
+
+    def sql(self):
+        return ()
+
+    def __bool__(self):
+        return False
+    
 def add_where_clause(clauses, where_clause, conjunction=where.and_):
     found = None
     new = []
