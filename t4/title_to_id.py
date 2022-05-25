@@ -3,7 +3,7 @@
 
 ##  This file is part of the t4 Python module collection. 
 ##
-##  Copyright 2011–20 by Diedrich Vorberg <diedrich@tux4web.de>
+##  Copyright 2011–22 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -114,7 +114,7 @@ path_sep_re = re.compile("|".join(path_seps))
 illegel_in_filename_re = re.compile(
     r"^\.|(\s*\.+\s+|/|\\|\.{2,}|:|!|#| |\"|'|\s)+")
 
-def safe_filename(name, contains_dir=False):
+def safe_filename(name, contains_dir=False, unicode_normalize_to="NFD"):
     if contains_dir:
         parts = path_sep_re.split(name)
         fn = parts[-1]
@@ -128,4 +128,5 @@ def safe_filename(name, contains_dir=False):
     while ret[0] == ".":
         ret = ret[1:]
 
-    return ret
+    return unicodedata.normalize(unicode_normalize_to, ret)
+
