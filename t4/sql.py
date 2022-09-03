@@ -594,6 +594,18 @@ def add_where_clause(clauses, where_clause, conjunction=where.and_):
         new.append(where_clause)
         
     return new
+
+def remove_clause_like(clause_cls, clauses):
+    return list(filter(lambda clause: not isinstance(clause, clause_cls),
+                       clauses))
+
+def has_clause_like(clause_cls, clauses):
+    for clause in clauses:
+        if isinstance(clause, clause_cls):
+            return True
+
+    return False
+
     
 class subquery_as_relation(relation):
     def __init__(self, select, alias):
