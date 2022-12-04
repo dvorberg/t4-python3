@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; -*-
 
-##  This file is part of the t4 Python module collection. 
+##  This file is part of the t4 Python module collection.
 ##
 ##  Copyright 2011–22 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
@@ -41,17 +41,17 @@ def asciify(string):
     # To work reliably the way it is, strings must consist of composed
     # characters.
     string = unicodedata.normalize("NFC", string)
-    
-    temp = u'' 
+
+    temp = u''
     for char in string:
         decomp = unicodedata.decomposition(char)
         if decomp: # Not an empty string
             d = decomp.split()[0]
             try:
-                temp += unichr(int(d, 16))
+                temp += chr(int(d, 16))
             except ValueError:
                 if d == "<super>":
-                    temp += unichr(int(decomp.split()[1], 16))
+                    temp += chr(int(decomp.split()[1], 16))
                 else:
                     pass
                     #raise Exception("Can't handle this: " + repr(decomp))
@@ -75,12 +75,12 @@ def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
 
     if all_lowercase: title = title.lower()
     title = title.replace("ß", "ss")
-    # title = asciify(title)
-    
+    title = asciify(title)
+
     # Eigentlich nur für’s ELKG.
     title = title.replace("¹", "1")
     title = title.replace("²", "2")
-    
+
     parts = [""]
     for char in title:
         if char in "abcdefghijklmnopqrstuvwxyz0123456789":
@@ -91,7 +91,7 @@ def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
 
     if parts[-1] == "":
         parts = parts[:-1]
-                
+
     id = separator.join(parts)
     id = id.encode("ascii", "ignore")
 
@@ -100,7 +100,7 @@ def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
 
     if id in reserved_ids:
         id = id.capitalize()
-    
+
     return id.decode("ascii")
 
 
@@ -110,7 +110,7 @@ if None in path_seps:
     path_seps.remove(None)
 
 path_sep_re = re.compile("|".join(path_seps))
-                         
+
 illegel_in_filename_re = re.compile(
     r"^\.|(\s*\.+\s+|/|\\|\.{2,}|:|!|#| |\"|'|\s)+")
 
@@ -120,13 +120,12 @@ def safe_filename(name, contains_dir=False, unicode_normalize_to="NFD"):
         fn = parts[-1]
     else:
         fn = name
-        
+
     ret = illegel_in_filename_re.sub(" ", name).strip()
 
     # The regular expression does not catch all cases in which someone
-    # might try to inject a hidden file (starting with a .). 
+    # might try to inject a hidden file (starting with a .).
     while ret[0] == ".":
         ret = ret[1:]
 
     return unicodedata.normalize(unicode_normalize_to, ret)
-
