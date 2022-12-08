@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-##  This file is part of the t4 Python module collection. 
+##  This file is part of the t4 Python module collection.
 ##
 ##  Copyright 2002–2021 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
@@ -48,7 +48,7 @@ def separated(char, parts):
 
     if len(ret) == 0:
         return tuple()
-    else:        
+    else:
         del ret[-1]
         return tuple(ret)
 
@@ -63,12 +63,12 @@ class Backend:
     """
     This class provies all the methods needed for a datasource to work
     with an SQL backend.  This class' instances will work for most
-    SQL92 complient backends that use utf-8 unicode encoding. 
+    SQL92 complient backends that use utf-8 unicode encoding.
     """
     def _param_placeholder_function(self, paramstyle):
         """
         Return a function-object for the param_placeholder(self, index)
-        method. 
+        method.
         """
         def qmark( index):
             return "?"
@@ -85,10 +85,10 @@ class Backend:
         pyformat = format
 
         return locals()[paramstyle]
-    
+
     def __init__(self, dbi_module, connection):
         self.connection = connection
-        
+
         self.param_placeholder = self._param_placeholder_function(
             dbi_module.paramstyle)
 
@@ -102,30 +102,30 @@ class Backend:
 
     escaped_chars = ( ('"', r'\"',),
                       ("'", r"\'",),
-                      ("%", "%%",), )    
+                      ("%", "%%",), )
     def escape_string(self, string):
         for a in self.escaped_chars:
             string = string.replace(a[0], a[1])
 
         return string
-    
-        
+
+
     # This function is set in the constructur
-    # 
+    #
     # def param_placeholder(self, index):
     #    . . .
     #
-    # Return a function-object of a method that accepts a 1-based 
+    # Return a function-object of a method that accepts a 1-based
     # index and returns a placeholder to be used in SQL commands.
     # See the `parmstyle` parameter of the connection as documented
     # in PEP 249.
-    # 
+    #
     # See _param_placeholder_function() above.
 
 
 class Part:
     """
-    Part of an SQL expression. 
+    Part of an SQL expression.
     """
     def sql_to(self, sql_buffer):
         if sql_buffer.debug:
@@ -139,28 +139,28 @@ class Part:
         signature = inspect.signature(func)
         args = [ available[name] for name in signature.parameters ]
         sql_buffer.print(func(*args))
-    
+
     def sql(self):
         raise NotImplementedError()
-        
+
     def debug(self):
         return self.sql()
 
-    
+
 class Parameter:
     def __init__(self, value):
         self._value = value
 
     @property
     def value(self):
-        return self._value        
+        return self._value
 
-    
+
 class SQLBuffer:
     def __init__(self, backend, debug=False):
         self.backend = backend
         self.debug = debug
-        
+
         self._sql = io.StringIO()
         self._parameters = []
 
@@ -188,7 +188,7 @@ class SQLBuffer:
     @property
     def sql(self):
         return self._sql.getvalue()
-    
+
     @property
     def parameters(self):
         return tuple(self._parameters)
@@ -207,7 +207,7 @@ class Statement(Part):
 
 class Command(Part):
     pass
-    
+
 class Clause(Part):
     """
     Base class for clauses. They will be ordered according to rank
@@ -215,7 +215,7 @@ class Clause(Part):
     """
     rank = 0
 
-    
+
 class Identifyer(Part):
     """
     Base class that encapsulates all sql identifyers.
@@ -239,14 +239,14 @@ class Identifyer(Part):
     @property
     def quote(self):
         return self._quote
-    
+
 
 identifyer = Identifyer
 
 def ensure_identifyer(i, quote=None):
     if i is None:
         return None
-    
+
     if isinstance(i, identifyer):
         name = i.name
         quote = i.quote or quote
@@ -254,8 +254,8 @@ def ensure_identifyer(i, quote=None):
         name = i
     else:
         raise TypeError("Identifyers must either be Identifyer "
-                        "instances or strings.")
-        
+                        "instances or strings. (Maybe user .name?)")
+
     return Identifyer(name, quote)
 
 
@@ -268,7 +268,7 @@ class quoted(Identifyer):
         Identifyer.__init__(self, name, True)
 
 
-        
+
 T = TypeVar("T")
 class Literal(Generic[T], Part):
     """
@@ -280,8 +280,8 @@ class Literal(Generic[T], Part):
 
     @property
     def value(self) -> T:
-        return self._value    
-    
+        return self._value
+
 class BackendLiteral(Literal[T]):
     """
     Base class for those literals passed to the backend as
@@ -298,7 +298,7 @@ class BackendLiteral(Literal[T]):
         raise NotImplemented("Don’t know how to represent the value "
                              "in debug SQL.")
 
-    
+
 class PythonLiteral(Literal[T]):
     """
     Base class for all values whose Python print() representation is
@@ -306,9 +306,9 @@ class PythonLiteral(Literal[T]):
     """
     def sql(self):
         return self._value
-        
+
     debug = sql
-    
+
 integer_literal = PythonLiteral[int]
 float_literal = PythonLiteral[float]
 
@@ -320,16 +320,16 @@ class string_literal(BackendLiteral[str]):
         if len(value) > 40:
             value = "%s[%i more chars]%s" % ( value[:10], len(value) - 20,
                                               value[-10:], )
-        
+
         return backend.quote_string(backend.escape_string(value))
 
-    
+
 class bytes_literal(BackendLiteral[bytes]):
     def debug(self, backend):
         value = "<%i bytes>" % len(self._value)
         return backend.quote_string(value)
 
-    
+
 class bool_literal(PythonLiteral[bool]):
     def sql(self):
         if self.value:
@@ -339,22 +339,22 @@ class bool_literal(PythonLiteral[bool]):
 
     debug = sql
 
-    
+
 class casted_literal(string_literal):
     sql_type_name = None
-    
+
     def __init__(self, data:Any):
         super().__init__(json.dumps(data))
 
     def debug(self, backend):
         return super().debug(backend), "::" + self.sql_type_name,
-        
+
     def sql(self):
         return ( Parameter(self._value), "::" + self.sql_type_name, )
 
 class json_literal(casted_literal):
     sql_type_name = "JSON"
-        
+
 class jsonb_literal(casted_literal):
     sql_type_name = "JSONB"
 
@@ -365,8 +365,8 @@ class date_literal(casted_literal):
     def __init__(self, value:datetime.date):
         super().__init__(value.strftime("%Y-%m-%d"))
 
-    
-    
+
+
 types = { int: integer_literal,
           float: float_literal,
           str: string_literal,
@@ -385,12 +385,12 @@ def find_literal_maybe(value):
             return types[t](value)
         else:
             raise TypeError("Can’t find literal class for: %s" % repr(t))
-        
-class relation(Part): 
+
+class relation(Part):
     def __init__(self, name, schema=None):
         self._name = ensure_identifyer(name)
         self._schema = ensure_identifyer(schema)
-        
+
     def sql(self):
         if self.schema is not None:
             return ( self.schema, ".", self.name, )
@@ -405,7 +405,7 @@ class relation(Part):
     def schema(self):
         return self._schema
 
-    
+
 class column(Part):
     def __init__(self, name, relation=None):
         self._name = ensure_identifyer(name)
@@ -423,7 +423,7 @@ class column(Part):
             replaced by underscores.
         """
         ret = self._name.name
-        
+
         if underscore:
             return replace(ret, ".", "_")
         else:
@@ -432,7 +432,7 @@ class column(Part):
     def quote(self):
         return self._quote
 
-            
+
 class expression(Part):
     """
     Encapsolate an SQL expression like an arithmetic expression or a
@@ -477,35 +477,35 @@ class array_expression(expression):
             raise ValueError("For an empty array, arraytype= must be set.")
 
     def sql(self):
-        
+
         values = comma_separated([find_literal_maybe(v) for v in self.values]),
         if self.arraytype:
             end = "::" + self.arraytype
         else:
             end = ""
-            
+
         return ( "ARRAY[", values, "]"+end)
-    
+
 class left_join(Clause):
     rank = 0
-    
+
     def __init__(self, relation, *on):
         self._relation = relation
         self._on = on
 
     def sql(self):
         return ( "LEFT JOIN ", self._relation, " ON ", ) + self._on
-    
+
 class right_join(Clause):
     rank = 0
-    
+
     def __init__(self, relation, *on):
         self._relation = relation
         self._on = on
 
     def sql(self):
         return ( "RIGHT JOIN ", self._relation, " ON ", ) + self._on
-    
+
 class where(Clause, expression):
     """
     Encapsulates the WHERE clause of a SELECT, UPDATE and DELETE
@@ -522,7 +522,7 @@ class where(Clause, expression):
     def __add__(self, other):
         """
         Adding two where clauses connects them using OR (including
-        parantheses). 
+        parantheses).
         """
         return self.or_(other)
 
@@ -542,25 +542,25 @@ class where(Clause, expression):
         others = filter(lambda o: bool(o), others)
 
         ret = list()
-        
+
         for other in others:
             ret.append("(")
             ret += list(other._parts)
             ret.append(")")
             ret.append(" %s " % conjunction)
-            
+
         if len(ret) < 1:
             raise ValueError("Empty input for %s_()" % conjunction.lower())
-        
+
         del ret[-1] # remove the last OR
 
-        return where(*ret)        
+        return where(*ret)
 
     # These two don’t have an explicit ‘self’, which makes the self-instance
-    # go into the ‘others’ as-is. 
+    # go into the ‘others’ as-is.
     def or_(*others):
         return where._conjoin("OR", *others)
-    
+
     def and_(*others):
         return where._conjoin("AND", *others)
 
@@ -578,7 +578,7 @@ class null_where(where):
 
     def __bool__(self):
         return False
-    
+
 def add_where_clause(clauses, where_clause, conjunction=where.and_):
     found = None
     new = []
@@ -592,7 +592,7 @@ def add_where_clause(clauses, where_clause, conjunction=where.and_):
         new.append(conjunction(where_clause, found))
     else:
         new.append(where_clause)
-        
+
     return new
 
 def remove_clause_like(clause_cls, clauses):
@@ -606,7 +606,7 @@ def has_clause_like(clause_cls, clauses):
 
     return False
 
-    
+
 class subquery_as_relation(relation):
     def __init__(self, select, alias):
         self._select = select
@@ -615,23 +615,23 @@ class subquery_as_relation(relation):
     def sql(self):
         return ( "(", self._select, ") AS ", self._alias, )
 
-    
+
 class order_by(Clause):
     """
     Encapsulate the ORDER BY clause of a SELECT statement. Takes a
     list of columns as argument.
     """
-    
+
     rank = 4
-    
+
     def __init__(self, *expressions, dir=None):
         """
         `dir` is either ASC (default) or DESC.
-        
+
         `expressions` may be expressions or tuples like ( expression,
         dir, ). The `dir` keyword parameter applies only to the last
         column identifyer and may create an SQL syntax error, of you
-        supply one through a tuple in *expressions. 
+        supply one through a tuple in *expressions.
         """
         def fixex(expression):
             if type(expression) in (list, tuple):
@@ -641,7 +641,7 @@ class order_by(Clause):
                 return ( ex, " " + dir, )
             else:
                 return expression
-            
+
         self._expressions = [ fixex(ex) for ex in expressions
                               if ex is not None ]
         self._dir = dir
@@ -656,13 +656,13 @@ class order_by(Clause):
 
     def sql(self):
         ret = [ "ORDER BY ", comma_separated(self._expressions), ]
-        
+
         if self._dir is not None:
             ret.append(self._dir)
 
         return tuple(ret)
 
-orderby = order_by    
+orderby = order_by
 
 
 class select(Statement):
@@ -677,19 +677,19 @@ class select(Statement):
             expressions = ( relations, )
         self._relations = relations
         clauses = [ clause for clause in clauses if clause is not None ]
-        
+
         for c in clauses:
             if not isinstance(c, Clause):
                 raise TypeError("%s is not an SQL clause" % repr(c))
 
         self._clauses = sorted(clauses, key=lambda clause: clause.rank)
-            
+
     def sql(self):
         return ( "SELECT ",
                  comma_separated(self._expressions),
                  " FROM ",
                  comma_separated(self._relations),
-                 " ", 
+                 " ",
                  space_separated(self._clauses), )
 
 
@@ -699,13 +699,13 @@ class group_by(Clause):
     list of columns as argument.
     """
     rank = 3
-    
+
     def __init__(self, *expressions, **kw):
         self._expressions = expressions
 
     def __sql__(self):
         return ( "GROUP BY ", comma_separated(self._expressions), )
-        
+
 groupby = group_by
 
 
@@ -714,7 +714,7 @@ class limit(Clause):
     Encapsulate a SELECT statement's limit clause.
     """
     rank = 5
-    
+
     def __init__(self, limit:int):
         self._limit = limit
 
@@ -726,9 +726,9 @@ class limit(Clause):
 class offset(Clause):
     """
     Encapsulate a SELECT statement's offset clause.
-    """    
+    """
     rank = 6
-    
+
     def __init__(self, offset:int):
         self._offset = offset
 
@@ -756,7 +756,7 @@ class insert(Command):
 
     def sql(self):
         relation = self._relation
-    
+
         ret = ["INSERT INTO ", self._relation,]
 
         if self._columns:
@@ -786,12 +786,12 @@ class insert(Command):
             del ret[-1]
 
         return ret
-        
+
 class update(Command):
     def __init__(self, relation, where_clause, data={}):
         self._relation = relation
         self._where = where_clause
-        
+
         self._data = {}
 
         for name, value in data.items():
@@ -799,7 +799,7 @@ class update(Command):
             value = find_literal_maybe(value)
 
             self._data[name] = value
-                
+
 
     def sql(self):
         ret = ["UPDATE ", self._relation, " SET "]
@@ -810,7 +810,7 @@ class update(Command):
         ret.append(" ")
         ret.append(self._where)
         return ret
-        
+
 class delete(Command):
     def __init__(self, relation, where_clause):
         self._relation = relation
