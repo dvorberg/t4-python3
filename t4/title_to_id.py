@@ -3,7 +3,7 @@
 
 ##  This file is part of the t4 Python module collection.
 ##
-##  Copyright 2011–22 by Diedrich Vorberg <diedrich@tux4web.de>
+##  Copyright 2011–25 by Diedrich Vorberg <diedrich@tux4web.de>
 ##
 ##  All Rights Reserved
 ##
@@ -66,6 +66,36 @@ default_reserved_ids = ("image_slots edit set get download id fields "
                         "get_image has_image tag image_tag search translator"
                         ).split(" ")
 
+# Yeah, this is revered beta code, sort of.
+greek_letters = {
+    "α": "a",
+    "β": "b",
+    "γ": "g",
+    "δ": "d",
+    "ε": "e",
+    "ζ": "z",
+    "η": "h",
+    "θ": "q",
+    "ι": "i",
+    "κ": "k",
+    "λ": "l",
+    "μ": "m",
+    "ν": "n",
+    "ξ": "c",
+    "ο": "o",
+    "π": "p",
+    "ρ": "r",
+    "σ": "s",
+    "ς": "s",
+    "τ": "t",
+    "υ": "u",
+    "φ": "f",
+    "χ": "x",
+    "ψ": "q",
+    "ω": "w"
+}
+
+
 def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
                 separator="_"):
     """
@@ -85,6 +115,8 @@ def title_to_id(title, all_lowercase=True, reserved_ids=default_reserved_ids,
     for char in title:
         if char in "abcdefghijklmnopqrstuvwxyz0123456789":
             parts[-1] += char
+        elif char in greek_letters:
+            parts[-1] += greek_letters[char]
         else:
             if len(parts[-1]) > 0:
                 parts.append("")
