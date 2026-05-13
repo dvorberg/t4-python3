@@ -24,7 +24,7 @@
 ##  I have added a copy of the GPL in the file gpl.txt.
 
 import re
-domain_name_re = re.compile("(?:[0-9a-z](?:[-0-9a-z]*[0-9a-z])?\.)+[a-z]{2,6}")
+domain_name_re = re.compile(r"(?:[0-9a-z](?:[-0-9a-z]*[0-9a-z])?\.)+[a-z]{2,6}")
 local_part_re = re.compile(r"[-A-Za-z0-9!#$%&'\*+/=\?^_`\{|\}~\.]+")
 
 email_re = re.compile(r"(?:[-A-Za-z0-9!#$%&'\*+/=\?^_`\{|\}~]\.?)*[-A-Za-z0-9!#$%&'\*+/=\?^_`\{|\}~]@(?:[0-9a-zA-Z](?:[-0-9a-zA-Z]*[0-9a-zA-Z])?\.)+[a-zA-Z]{2,4}")
@@ -39,6 +39,6 @@ ip_v4_address_with_mask_re = re.compile(
 ip_v4_address_with_mask_re_groups = re.compile(
     ip_v4_address_with_mask_re.pattern.replace("?:", ""))
 
-http_url_re = re.compile("https?://(?:[0-9a-z](?:[0-9a-z-]*[0-9a-z])?\.)+[a-z]{2,6}(/.*)?")
+http_url_re = re.compile(r"https?://(?:[0-9a-z](?:[0-9a-z-]*[0-9a-z])?\.)+[a-z]{2,6}(/.*)?")
 
 login_re = re.compile(r"^[a-zA-Z0-9_][-a-zA-Z0-9_\.]+$")
